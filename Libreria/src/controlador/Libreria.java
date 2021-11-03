@@ -1,5 +1,6 @@
 package controlador;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -9,7 +10,7 @@ import javax.swing.table.DefaultTableModel;
 
 import modelo.Libro;
 
-public class Libreria {
+public class Libreria implements Serializable{
 	private HashMap<String,Libro> arrayLibro = new HashMap<String,Libro>();
 	public void addLibros(Libro libro) {
 		this.arrayLibro.put(libro.getISBN(), libro);
@@ -49,7 +50,7 @@ public class Libreria {
 	}
 	
 	public void rellenarTabla(JTable tablaLibros) {
-		String nombreColumna[] = { "ISBN", "Titulo", "Autor", "Editorial", "Precio","Formato","Estado","Cantidad" };
+		String nombreColumna[] = { "ISBN", "Titulo", "Autor", "Editorial", "Precio","Formato","Estado","Cantidad","Genero" };
 		String[][] filasTabla = new String[this.getLibreria().size()][nombreColumna.length];
 		
 		for (int i = 0; i < this.getLibreria().size(); i++) {
@@ -62,6 +63,7 @@ public class Libreria {
 			filasTabla[i][5] = this.getLibro(i).getFormato();
 			filasTabla[i][6] = this.getLibro(i).getEstado();
 			filasTabla[i][7] = String.valueOf(this.getLibro(i).getCantidad());
+			filasTabla[i][8] = this.getLibro(i).getGenero();
 		}
 		DefaultTableModel tablaCompleta = new DefaultTableModel(filasTabla, nombreColumna);
 		tablaLibros.setModel(tablaCompleta);

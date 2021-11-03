@@ -1,6 +1,8 @@
 package modelo;
 
-public class Libro {
+import java.io.Serializable;
+
+public class Libro implements Serializable {
 	private String ISBN;
 	private String titulo;
 	private String autor;
@@ -9,9 +11,10 @@ public class Libro {
 	private String formato;
 	private String estado;
 	private int cantidad;
+	private String genero;
 
 	public Libro(String iSBN, String titulo, String autor, String editorial, float precio, String formato,
-			String estado,int cantidad) {
+			String estado,int cantidad,String genero) {
 		super();
 		ISBN = iSBN;
 		this.titulo = titulo;
@@ -21,6 +24,7 @@ public class Libro {
 		this.estado = estado;
 		this.formato = formato;
 		this.cantidad = cantidad;
+		this.genero = genero;
 	}
 
 	public float getPrecio() {
@@ -45,6 +49,10 @@ public class Libro {
 
 	public String getEditorial() {
 		return editorial;
+	}
+	
+	public String getGenero() {
+		return this.genero;
 	}
 
 	public String getFormato() {

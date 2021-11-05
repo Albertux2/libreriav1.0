@@ -40,6 +40,7 @@ import javax.swing.JTable;
 import javax.swing.JRadioButton;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.SoftBevelBorder;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 
 import controlador.Events;
@@ -54,6 +55,8 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.SpinnerModel;
 import javax.swing.JComboBox;
+import java.awt.CardLayout;
+import java.awt.GridLayout;
 
 public class UI extends JFrame {
 
@@ -84,7 +87,7 @@ public class UI extends JFrame {
 	protected JPanel panelLibro;
 	protected JTextField spnTxt;
 	private JMenuBar menuBar;
-	private JMenu mnNewMenu;
+	private JMenu menuLibro;
 	protected JMenuItem btnStock;
 	protected JMenuItem btnConsultar;
 	protected JMenuItem btnEdit;
@@ -95,7 +98,12 @@ public class UI extends JFrame {
 	private JLabel lblNewLabel_2;
 	protected JComboBox comboBox;
 	private JLabel lblNewLabel_3;
-
+	private JPanel borderPanel;
+	private JPanel cardPanel;
+	private WelcomePanel welcome = new WelcomePanel();
+	private JMenu menuNavegacion;
+	private JMenuItem menuLibreria;
+	private JMenuItem menuBienvenida;
 	/**
 	 * Launch the application.
 	 */
@@ -113,6 +121,10 @@ public class UI extends JFrame {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		contentPane = new JPanel();
+		contentPane.setBackground(backgroundColor);
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(contentPane);
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 1152, 647);
@@ -120,27 +132,26 @@ public class UI extends JFrame {
 		menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
 
-		mnNewMenu = new JMenu("Libros");
-		menuBar.add(mnNewMenu);
+		menuLibro = new JMenu("Libros");
+		menuBar.add(menuLibro);
 
 		btnConsultar = new JMenuItem("Consultar");
-		mnNewMenu.add(btnConsultar);
+		menuLibro.add(btnConsultar);
 
 		btnStock = new JMenuItem("Gestionar stock");
-		mnNewMenu.add(btnStock);
+		menuLibro.add(btnStock);
 
+		borderPanel = new JPanel();
+		borderPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+		borderPanel.setBackground(new Color(58, 175, 185));
+		borderPanel.setLayout(new BorderLayout(0, 0));
 		btnEdit = new JMenuItem("Editar");
-		mnNewMenu.add(btnEdit);
-		contentPane = new JPanel();
-		contentPane.setBackground(backgroundColor);
-		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-		setContentPane(contentPane);
-		contentPane.setLayout(new BorderLayout(0, 0));
+		menuLibro.add(btnEdit);
 
 		JPanel panelSuperior = new JPanel();
 		panelSuperior.setBorder(new LineBorder(new Color(34, 117, 124), 3, false));
 		panelSuperior.setBackground(new Color(22, 88, 93));
-		contentPane.add(panelSuperior, BorderLayout.NORTH);
+		borderPanel.add(panelSuperior, BorderLayout.NORTH);
 
 		JLabel lblTitulo = new JLabel("LIBRERIA DE ALBERTO\r\n");
 		lblTitulo.setForeground(Color.WHITE);
@@ -149,7 +160,7 @@ public class UI extends JFrame {
 
 		JPanel panelInferior = new JPanel();
 		panelInferior.setBackground(new Color(58, 175, 185));
-		contentPane.add(panelInferior, BorderLayout.SOUTH);
+		borderPanel.add(panelInferior, BorderLayout.SOUTH);
 		
 		btnClear = new JButton("");
 		btnClear.setPreferredSize(new Dimension(150, 45));
@@ -176,7 +187,7 @@ public class UI extends JFrame {
 		panelTab = new JTabbedPane(JTabbedPane.TOP);
 		panelTab.setFont(new Font("Tahoma", Font.PLAIN, 16));
 
-		contentPane.add(panelTab, BorderLayout.CENTER);
+		borderPanel.add(panelTab, BorderLayout.CENTER);
 
 		panelLibro = new ImagePanel();
 		panelLibro.setBackground(new Color(103, 211, 225));
@@ -409,20 +420,53 @@ public class UI extends JFrame {
 		
 		spnStock = new JSpinner(new SpinnerNumberModel(1, 0, 999, 1));
 		spnTxt = ((JSpinner.DefaultEditor) spnStock.getEditor()).getTextField();
+		contentPane.setLayout(new GridLayout(0, 1, 0, 0));
 		spnStock.setFont(new Font("Tahoma", Font.PLAIN, 17));
 		GridBagConstraints gbc_spnStock = new GridBagConstraints();
 		gbc_spnStock.fill = GridBagConstraints.HORIZONTAL;
 		gbc_spnStock.gridx = 3;
 		gbc_spnStock.gridy = 0;
 		panelStockGenero.add(spnStock, gbc_spnStock);
-
-		SpinnerNumberModel model1 = new SpinnerNumberModel(1, 0, 100, 1);
 		setSmallIcon(btnGuardar, "/saveIcon.png", "Guardar libro");
 		setSmallIcon(btnSalir, "/exit.png", "Salir de la aplicaci�n");
 		setSmallIcon(btnClear,"/clear.png","Limpia los datos de la pantalla");
+		
+		cardPanel = new JPanel();
+		contentPane.add(cardPanel);
+		CardLayout card = new CardLayout(0,0);
+		cardPanel.setLayout(card);
+		cardPanel.add(welcome,"welcome");
+		cardPanel.add(borderPanel,"libreria");
+		card.addLayoutComponent(welcome,"welcome");
+		card.addLayoutComponent(borderPanel,"libreria");
+		card.show(cardPanel, "welcome");
+		menuLibro.setEnabled(false);
+		
 		setSmallIcon(btnEdit, "/edit.png", null);
 		setSmallIcon(btnStock, "/stock.png", null);
-		setSmallIcon(btnConsultar, "/libr.png", null);
+		setSmallIcon(btnConsultar, "/consultar.png", null);
+
+		
+		menuNavegacion = new JMenu("Navegacion");
+		menuBar.add(menuNavegacion);
+		
+		menuBienvenida = new JMenuItem("Bienvenida");
+		menuBienvenida.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				card.show(cardPanel, "welcome");
+			}
+		});
+		menuNavegacion.add(menuBienvenida);
+		
+		menuLibreria = new JMenuItem("Libreria");
+		menuLibreria.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				card.show(cardPanel,"libreria");
+				menuBienvenida.setVisible(false);
+				menuLibro.setEnabled(true);
+			}
+		});
+		menuNavegacion.add(menuLibreria);
 		panelTab.addChangeListener((c) -> {
 			Component panelSeleccionado = panelTab.getSelectedComponent();
 			if (panelSeleccionado != panelLibro) {
@@ -435,6 +479,9 @@ public class UI extends JFrame {
 				btnClear.setEnabled(true);
 			}
 		});
+		
+		setSmallIcon(menuLibreria,"/libr.png",null);
+		setSmallIcon(menuBienvenida,"/logo.gif",null);
 		
 		txtIsbn.addKeyListener(new KeyAdapter() {
 			@Override
@@ -543,6 +590,22 @@ public class UI extends JFrame {
 		ImageIcon resizedImg = new ImageIcon(img.getImage().getScaledInstance(40, 40, Image.SCALE_DEFAULT));
 		component.setIcon(resizedImg);
 		component.setToolTipText(description);
+	}
+	
+
+	public void limpiarTabla() {
+		DefaultTableModel tablaVacia = new DefaultTableModel();
+		tablaLibros.setModel(tablaVacia);
+	}
+
+	public String getIsbnTabla() {
+		try {
+			int columnaIsbn = 0;
+			int fila = tablaLibros.getSelectedRow();
+			return String.valueOf(tablaLibros.getValueAt(fila, columnaIsbn));
+		} catch (Exception e) {
+			return null;
+		}
 	}
 
 	public boolean checkIfNull() {

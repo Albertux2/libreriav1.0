@@ -59,7 +59,11 @@ public class ParaUI extends UI {
 			try {
 				if (Utiles.validateIsbn(getISBN())) {
 					if (!checkIfNull()) {
-						addLibro();
+						if(!libreria.containsISBN(getISBN())) {
+							addLibro();
+						}else {
+							JOptionPane.showMessageDialog(null, "Ya existe un libro con ese ISBN, introduzca otro.");
+						}
 					} else {
 						JOptionPane.showMessageDialog(null, "Debe rellenar todos los campos");
 					}
@@ -167,21 +171,6 @@ public class ParaUI extends UI {
 
 	private void borrarLibro(String isbn) {
 		libreria.borrarLibro(isbn);
-	}
-
-	private void limpiarTabla() {
-		DefaultTableModel tablaVacia = new DefaultTableModel();
-		tablaLibros.setModel(tablaVacia);
-	}
-
-	private String getIsbnTabla() {
-		try {
-			int columnaIsbn = 0;
-			int fila = tablaLibros.getSelectedRow();
-			return String.valueOf(tablaLibros.getValueAt(fila, columnaIsbn));
-		} catch (Exception e) {
-			return null;
-		}
 	}
 
 	private String getISBNWithPane() {

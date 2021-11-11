@@ -483,22 +483,7 @@ public class UI extends JFrame {
 		setSmallIcon(menuLibreria,"/libr.png",null);
 		setSmallIcon(menuBienvenida,"/logo.gif",null);
 		
-		txtIsbn.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyTyped(KeyEvent e) {
-				super.keyTyped(e);
-				char keyTyped = e.getKeyChar();
-				String isbn = txtIsbn.getText() + keyTyped;
-				if (isbn.length() > 13 || !Character.isDigit(keyTyped)) {
-					e.consume();
-				}
-				if (isbn.length() >= 13) {
-					Utils.setValidBackground(txtIsbn);
-				} else {
-					Utils.setWrongBackground(txtIsbn);
-				}
-			}
-		});
+		txtIsbn.addKeyListener(Events.getRestrictedIsbnText(txtIsbn));
 		txtAutor.addKeyListener(Events.getRestrictedTextEvent());
 		txtEditorial.addKeyListener(Events.getRestrictedTextEvent());
 		txtPrecio.addKeyListener(Events.getRestrictedPriceEvent(txtPrecio));

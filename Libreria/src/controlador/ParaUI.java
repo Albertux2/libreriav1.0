@@ -14,6 +14,7 @@ import java.util.Iterator;
 
 import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.JTable;
@@ -21,6 +22,7 @@ import javax.swing.table.DefaultTableModel;
 
 import modelo.*;
 import vista.EditPanel;
+import vista.InputComponents;
 import vista.StockPanel;
 import vista.UI;
 
@@ -35,7 +37,7 @@ public class ParaUI extends UI {
 		super();
 		loadBookstore();
 		btnEdit.addActionListener((e) -> {
-			String isbn = JOptionPane.showInputDialog("Introduce el ISBN del libro a editar");
+			String isbn = Utils.getISBNWithPane(bookstore);
 			if (isbn != null) {
 				try {
 					editPanel.fillFields(bookstore.getBook(isbn));
@@ -72,7 +74,8 @@ public class ParaUI extends UI {
 						JOptionPane.showMessageDialog(null, "Debe rellenar todos los campos");
 					}
 				} else {
-					JOptionPane.showMessageDialog(null, "El isbn no es valido, minimo 13 caracteres");
+					JOptionPane.showMessageDialog(null,
+							"El isbn no es valido o esta vacio, debe contener 13 caracteres");
 				}
 				clearFields();
 			} catch (Exception e1) {
@@ -83,7 +86,7 @@ public class ParaUI extends UI {
 		btnBorrar.addActionListener((e) -> {
 			String isbn = getIsbnFromTable();
 			if (isbn == null) {
-				isbn = JOptionPane.showInputDialog("Introduce el ISBN a borrar");
+				isbn = Utils.getISBNWithPane(bookstore);
 				if (isbn != null) {
 					if (!bookstore.containsISBN(isbn)) {
 						JOptionPane.showMessageDialog(null, "El ISBN introducido no existe");
@@ -98,7 +101,7 @@ public class ParaUI extends UI {
 		});
 
 		btnConsultar.addActionListener((e) -> {
-			String isbn = JOptionPane.showInputDialog("Introduce el ISBN a consultar");
+			String isbn = Utils.getISBNWithPane(bookstore);
 			if (isbn != null) {
 				Book libroAConsultar = bookstore.getBook(isbn);
 				clearFields();
@@ -122,7 +125,7 @@ public class ParaUI extends UI {
 			Integer cantidad;
 			cantidad = Utils.askQuantity();
 			if (cantidad != 0) {
-				String isbn = getISBNWithPane();
+				String isbn = Utils.getISBNWithPane(bookstore);
 				if (isbn != null) {
 					Book libro = bookstore.getBook(isbn);
 					if (libro.getQuantity() <= cantidad) {
@@ -152,7 +155,7 @@ public class ParaUI extends UI {
 			Integer cantidad = 0;
 			cantidad = Utils.askQuantity();
 			if (cantidad != 0) {
-				String isbn = getISBNWithPane();
+				String isbn = Utils.getISBNWithPane(bookstore);
 				if (isbn != null) {
 					Book libro = bookstore.getBook(isbn);
 					libro.setQuantity(libro.getQuantity() + cantidad);
@@ -175,15 +178,6 @@ public class ParaUI extends UI {
 
 	private void removeBook(String isbn) {
 		bookstore.removeBook(isbn);
-	}
-
-	private String getISBNWithPane() {
-		String isbn = JOptionPane.showInputDialog(null, "Introduce el ISBN a comprobar");
-		if (bookstore.containsISBN(isbn))
-			return isbn;
-		else
-			JOptionPane.showMessageDialog(null, "ISBN invalido o inexistente");
-		return null;
 	}
 
 	private void saveBookInFile(Book libro) {

@@ -10,7 +10,7 @@ import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
 import javax.swing.JOptionPane;
 
-public class Utiles {
+public class Utils {
 	public static String getSelectedRadio(ButtonGroup group) {
 		Enumeration<AbstractButton> elements = group.getElements();
 		for (int i = 0; i < group.getButtonCount(); i++) {

@@ -165,7 +165,7 @@ public class EditPanel extends JPanel {
 		}
 	}
 
-	public void vaciarCampos() {
+	public void clearFields() {
 		txtAutor.setText("");
 		txtPrecio.setText("");
 		txtTitulo.setText("");
@@ -206,17 +206,17 @@ public class EditPanel extends JPanel {
 
 	public boolean checkIfNull() {
 		return txtPrecio.getText().equals("") || txtAutor.getText().equals("") || txtEditorial.getText().equals("")
-				|| txtTitulo.getText().equals("") || Utiles.getSelectedRadio(bgFormato).equals("")
-				|| Utiles.getSelectedRadio(bgEstado).equals("");
+				|| txtTitulo.getText().equals("") || Utils.getSelectedRadio(bgFormato).equals("")
+				|| Utils.getSelectedRadio(bgEstado).equals("");
 	}
 
-	public void rellenarCampos(Libro libro) {
-		txtAutor.setText(libro.getAutor());
+	public void fillFields(Book libro) {
+		txtAutor.setText(libro.getAuthor());
 		txtEditorial.setText(libro.getEditorial());
-		txtPrecio.setText(String.valueOf(libro.getPrecio()));
-		txtTitulo.setText(libro.getTitulo());
-		Utiles.setSelectedRadio(bgFormato, libro.getFormato());
-		Utiles.setSelectedRadio(bgEstado, libro.getEstado());
+		txtPrecio.setText(String.valueOf(libro.getPrice()));
+		txtTitulo.setText(libro.getTitle());
+		Utils.setSelectedRadio(bgFormato, libro.getFormat());
+		Utils.setSelectedRadio(bgEstado, libro.getState());
 	}
 
 

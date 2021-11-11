@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 
@@ -24,44 +25,47 @@ import vista.StockPanel;
 import vista.UI;
 
 public class ParaUI extends UI {
-	ControlFichero ficheros = new ControlFichero();
-	String path = "./src/files/libreria.lib";
-	Libreria libreria;
+	FileControl fileControl = FileControl.getInstance();
+	String path = "./src/files/libros.lib";
+	Bookstore bookstore;
 	EditPanel editPanel = new EditPanel();
 	StockPanel stockPanel = new StockPanel();
 
 	public ParaUI() {
 		super();
-		cargarLibreria();
-		saveOnClose();
+		loadBookstore();
 		btnEdit.addActionListener((e) -> {
 			String isbn = JOptionPane.showInputDialog("Introduce el ISBN del libro a editar");
-			try {
-				editPanel.rellenarCampos(libreria.getLibro(isbn));
-				JOptionPane.showMessageDialog(null, editPanel);
-				if (!editPanel.checkIfNull()) {
-					libreria.addLibros(new Libro(isbn, editPanel.getTxtTitulo().getText(),
-							editPanel.getTxtAutor().getText(), editPanel.getTxtEditorial().getText(),
-							Float.valueOf(editPanel.getTxtPrecio().getText()),
-							Utiles.getSelectedRadio(editPanel.getBgFormato()),
-							Utiles.getSelectedRadio(editPanel.getBgEstado()), (Integer) spnStock.getValue(),comboBox.getSelectedItem().toString()));
+			if (isbn != null) {
+				try {
+					editPanel.fillFields(bookstore.getBook(isbn));
+					JOptionPane.showMessageDialog(null, editPanel);
+					if (!editPanel.checkIfNull()) {
+						bookstore.addBook(new Book(isbn, editPanel.getTxtTitulo().getText(),
+								editPanel.getTxtAutor().getText(), editPanel.getTxtEditorial().getText(),
+								Float.valueOf(editPanel.getTxtPrecio().getText()),
+								Utils.getSelectedRadio(editPanel.getBgFormato()),
+								Utils.getSelectedRadio(editPanel.getBgEstado()), (Integer) spnStock.getValue(),
+								comboBox.getSelectedItem().toString()));
+					}
+					editPanel.clearFields();
+					bookstore.fillTable(tablaLibros);
+					deleteBook(isbn);
+					saveBookInFile(bookstore.getBook(isbn));
+				} catch (Exception e1) {
+					JOptionPane.showMessageDialog(null, "El ISBN introduce no es válido o no existe");
 				}
-
-				editPanel.vaciarCampos();
-				libreria.rellenarTabla(tablaLibros);
-				actualizarFichero();
-			} catch (Exception e1) {
-				JOptionPane.showMessageDialog(null, "El ISBN introduce no es válido o no existe");
 			}
 
 		});
 		btnGuardar.addActionListener((e) -> {
 			try {
-				if (Utiles.validateIsbn(getISBN())) {
+				if (Utils.validateIsbn(getISBN())) {
 					if (!checkIfNull()) {
-						if(!libreria.containsISBN(getISBN())) {
-							addLibro();
-						}else {
+						if (!bookstore.containsISBN(getISBN())) {
+							addBook();
+							saveBookInFile(bookstore.getBook(getISBN()));
+						} else {
 							JOptionPane.showMessageDialog(null, "Ya existe un libro con ese ISBN, introduzca otro.");
 						}
 					} else {
@@ -70,127 +74,136 @@ public class ParaUI extends UI {
 				} else {
 					JOptionPane.showMessageDialog(null, "El isbn no es valido, minimo 13 caracteres");
 				}
-				vaciarCampos();
-				actualizarFichero();
+				clearFields();
 			} catch (Exception e1) {
 				JOptionPane.showMessageDialog(null, "Error al guardar");
 			}
 		});
-		
+
 		btnBorrar.addActionListener((e) -> {
-			String isbn = getIsbnTabla();
+			String isbn = getIsbnFromTable();
 			if (isbn == null) {
 				isbn = JOptionPane.showInputDialog("Introduce el ISBN a borrar");
-				if (!libreria.containsISBN(isbn)) {
-					JOptionPane.showMessageDialog(null, "El ISBN introducido no existe");
+				if (isbn != null) {
+					if (!bookstore.containsISBN(isbn)) {
+						JOptionPane.showMessageDialog(null, "El ISBN introducido no existe");
+					}
 				}
 			}
-			borrarLibro(isbn);
-			limpiarTabla();
-			libreria.rellenarTabla(tablaLibros);
-			vaciarCampos();
-			actualizarFichero();
+			this.deleteBook(isbn);
+			removeBook(isbn);
+			clearTable();
+			bookstore.fillTable(tablaLibros);
+			clearFields();
 		});
 
 		btnConsultar.addActionListener((e) -> {
 			String isbn = JOptionPane.showInputDialog("Introduce el ISBN a consultar");
-			Libro libroAConsultar = libreria.getLibro(isbn);
-			vaciarCampos();
-			try {
-				rellenarCampos(libroAConsultar);
-				setEnabledAll(false);
-				btnClear.setEnabled(true);
-				btnGuardar.setVisible(false);
-
-			} catch (Exception e2) {
-				JOptionPane.showMessageDialog(null, "El ISBN introducido no existe o no es válido");
+			if (isbn != null) {
+				Book libroAConsultar = bookstore.getBook(isbn);
+				clearFields();
+				try {
+					fillFields(libroAConsultar);
+					setEnabledAll(false);
+					btnClear.setEnabled(true);
+					btnGuardar.setVisible(false);
+				} catch (Exception e2) {
+					JOptionPane.showMessageDialog(null, "El ISBN introducido no existe o no es válido");
+				}
 			}
-
 		});
 		editPanel.getTxtAutor().addKeyListener(Events.getRestrictedTextEvent());
 		editPanel.getTxtEditorial().addKeyListener(Events.getRestrictedTextEvent());
-		editPanel.getTxtPrecio().addKeyListener(Events.getRestrictedPriceEvent(editPanel.getTxtPrecio().getText()));
+		editPanel.getTxtPrecio().addKeyListener(Events.getRestrictedPriceEvent(editPanel.getTxtPrecio()));
 		btnStock.addActionListener((e) -> {
 			JOptionPane.showMessageDialog(null, stockPanel);
 		});
 		stockPanel.getBtnDown().addActionListener((e) -> {
-			Integer cantidad = 0;
-			cantidad = Utiles.askQuantity();
-			String isbn = getISBNWithPane();
-			if (isbn != null && cantidad != 0) {
-				Libro libro = libreria.getLibro(isbn);
-				if (libro.getCantidad() <= cantidad) {
-					int showConfirmDialog = JOptionPane.showConfirmDialog(null,
-							"Cantidad mayor al stock,Â¿desea eliminar el libro?");
+			Integer cantidad;
+			cantidad = Utils.askQuantity();
+			if (cantidad != 0) {
+				String isbn = getISBNWithPane();
+				if (isbn != null) {
+					Book libro = bookstore.getBook(isbn);
+					if (libro.getQuantity() <= cantidad) {
+						int showConfirmDialog = JOptionPane.showConfirmDialog(null,
+								"Cantidad mayor al stock,Â¿desea eliminar el libro?");
 
-					if (showConfirmDialog == JOptionPane.YES_OPTION) {
-						libreria.removeLibro(isbn);
-						JOptionPane.showMessageDialog(null, "Libro eliminado con exito");
+						if (showConfirmDialog == JOptionPane.YES_OPTION) {
+							bookstore.removeBook(isbn);
+							deleteBook(isbn);
+							JOptionPane.showMessageDialog(null, "Libro eliminado con exito");
+						} else {
+							libro.setQuantity(0);
+						}
 					} else {
-						libro.setCantidad(0);
+						libro.setQuantity(libro.getQuantity() - cantidad);
+						JOptionPane.showMessageDialog(null,
+								"Se han eliminado " + cantidad + ", stock restante: " + libro.getQuantity());
 					}
-				} else {
-					libro.setCantidad(libro.getCantidad() - cantidad);
-					JOptionPane.showMessageDialog(null,
-							"Se han eliminado " + cantidad + ", stock restante: " + libro.getCantidad());
+					bookstore.fillTable(tablaLibros);
+					deleteBook(isbn);
+					saveBookInFile(bookstore.getBook(isbn));
 				}
-				libreria.rellenarTabla(tablaLibros);
-				actualizarFichero();
 			}
 		});
 
 		stockPanel.getBtnUp().addActionListener((e) -> {
 			Integer cantidad = 0;
-			cantidad = Utiles.askQuantity();
-			String isbn = getISBNWithPane();
-			if (isbn != null && cantidad != 0) {
-				Libro libro = libreria.getLibro(isbn);
-				libro.setCantidad(libro.getCantidad() + cantidad);
-				libreria.rellenarTabla(tablaLibros);
-				JOptionPane.showMessageDialog(null, "Se han añadido " + cantidad + ", stock : " + libro.getCantidad());
-			}
-			actualizarFichero();
-		});
-	}
-
-	private void saveOnClose() {
-		Runtime.getRuntime().addShutdownHook(new Thread() {
-			@Override
-			public void run() {
-				ficheros.guardar(path, libreria, false);
+			cantidad = Utils.askQuantity();
+			if (cantidad != 0) {
+				String isbn = getISBNWithPane();
+				if (isbn != null) {
+					Book libro = bookstore.getBook(isbn);
+					libro.setQuantity(libro.getQuantity() + cantidad);
+					bookstore.fillTable(tablaLibros);
+					JOptionPane.showMessageDialog(null,
+							"Se han añadido " + cantidad + ", stock : " + libro.getQuantity());
+					deleteBook(isbn);
+					saveBookInFile(bookstore.getBook(isbn));
+				}
 			}
 		});
 	}
 
-	private void addLibro() {
-		libreria.addLibros(new Libro(getISBN(), txtTitulo.getText(), txtAutor.getText(), txtEditorial.getText(),
-				Float.valueOf(txtPrecio.getText()), Utiles.getSelectedRadio(bgFormato),
-				Utiles.getSelectedRadio(bgEstado), (Integer) spnStock.getValue(),comboBox.getSelectedItem().toString()));
-		libreria.rellenarTabla(tablaLibros);
+	private void addBook() {
+		bookstore.addBook(new Book(getISBN(), txtTitulo.getText(), txtAutor.getText(), txtEditorial.getText(),
+				Float.valueOf(txtPrecio.getText()), Utils.getSelectedRadio(bgFormato), Utils.getSelectedRadio(bgEstado),
+				(Integer) spnStock.getValue(), comboBox.getSelectedItem().toString()));
+		bookstore.fillTable(tablaLibros);
 	}
 
-	private void borrarLibro(String isbn) {
-		libreria.borrarLibro(isbn);
+	private void removeBook(String isbn) {
+		bookstore.removeBook(isbn);
 	}
 
 	private String getISBNWithPane() {
 		String isbn = JOptionPane.showInputDialog(null, "Introduce el ISBN a comprobar");
-		if (libreria.containsISBN(isbn))
+		if (bookstore.containsISBN(isbn))
 			return isbn;
 		else
 			JOptionPane.showMessageDialog(null, "ISBN invalido o inexistente");
 		return null;
 	}
 
-	private void actualizarFichero() {
-		ficheros.guardar(path, libreria, false);
+	private void saveBookInFile(Book libro) {
+		fileControl.save(path, libro, true);
 	}
 
-	private void cargarLibreria() {
-		libreria = ficheros.get(path);
-		if (libreria == null) {
-			libreria = new Libreria();
+	private void deleteBook(String isbn) {
+		ArrayList<Book> nonDeletedBooks = fileControl.delete(path, isbn);
+		fileControl.saveList(path, nonDeletedBooks);
+	}
+
+	private void loadBookstore() {
+		int index = 0;
+		bookstore = new Bookstore();
+		Book libro = fileControl.getWithIndex(path, index);
+		while (libro != null) {
+			bookstore.addBook(libro);
+			index++;
+			libro = fileControl.getWithIndex(path, index);
 		}
-		libreria.rellenarTabla(tablaLibros);
+		bookstore.fillTable(tablaLibros);
 	}
 }

@@ -44,8 +44,8 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 
 import controlador.Events;
-import modelo.Libro;
-import modelo.Utiles;
+import modelo.Book;
+import modelo.Utils;
 
 import java.awt.FlowLayout;
 import javax.swing.border.LineBorder;
@@ -57,6 +57,7 @@ import javax.swing.SpinnerModel;
 import javax.swing.JComboBox;
 import java.awt.CardLayout;
 import java.awt.GridLayout;
+import javax.swing.JCheckBox;
 
 public class UI extends JFrame {
 
@@ -83,7 +84,6 @@ public class UI extends JFrame {
 	private JLabel lblNewLabel_1;
 	protected ButtonGroup bgEstado = new ButtonGroup();
 	protected ButtonGroup bgFormato = new ButtonGroup();
-	private JPanel panel_1;
 	protected JPanel panelLibro;
 	protected JTextField spnTxt;
 	private JMenuBar menuBar;
@@ -404,8 +404,8 @@ public class UI extends JFrame {
 		String[] genres = new String[] {"Miedo","Fantasia","Aventura","Sci-Fi","Narrativo","Drama","Romance"};
 		comboBox = new JComboBox(genres);
 		GridBagConstraints gbc_comboBox = new GridBagConstraints();
-		gbc_comboBox.insets = new Insets(0, 0, 0, 5);
 		gbc_comboBox.fill = GridBagConstraints.HORIZONTAL;
+		gbc_comboBox.insets = new Insets(0, 0, 0, 5);
 		gbc_comboBox.gridx = 1;
 		gbc_comboBox.gridy = 0;
 		panelStockGenero.add(comboBox, gbc_comboBox);
@@ -493,20 +493,20 @@ public class UI extends JFrame {
 					e.consume();
 				}
 				if (isbn.length() >= 13) {
-					Utiles.setValidBackground(txtIsbn);
+					Utils.setValidBackground(txtIsbn);
 				} else {
-					Utiles.setWrongBackground(txtIsbn);
+					Utils.setWrongBackground(txtIsbn);
 				}
 			}
 		});
 		txtAutor.addKeyListener(Events.getRestrictedTextEvent());
 		txtEditorial.addKeyListener(Events.getRestrictedTextEvent());
-		txtPrecio.addKeyListener(Events.getRestrictedPriceEvent(txtPrecio.getText()));
+		txtPrecio.addKeyListener(Events.getRestrictedPriceEvent(txtPrecio));
 		btnSalir.addActionListener((e) -> {
 			System.exit(0);
 		});
 		btnClear.addActionListener((e) -> {
-			vaciarCampos();
+			clearFields();
 			setEnabledAll(true);
 			btnGuardar.setVisible(true);
 		});
@@ -521,6 +521,7 @@ public class UI extends JFrame {
 				}
 			}
 		});
+		changeTextFieldTextColor(new Color(22, 88, 93));
 	}
 
 	private void addRadiosToGroup(JPanel panel, ButtonGroup group) {
@@ -533,19 +534,19 @@ public class UI extends JFrame {
 		return txtIsbn.getText();
 	}
 
-	public void rellenarCampos(Libro libro) {
-		txtAutor.setText(libro.getAutor());
+	public void fillFields(Book libro) {
+		txtAutor.setText(libro.getAuthor());
 		txtEditorial.setText(libro.getEditorial());
 		txtIsbn.setText(libro.getISBN());
-		txtPrecio.setText(String.valueOf(libro.getPrecio()));
-		txtTitulo.setText(libro.getTitulo());
-		Utiles.setSelectedRadio(bgFormato, libro.getFormato());
-		Utiles.setSelectedRadio(bgEstado, libro.getEstado());
-		spnStock.setValue(Integer.valueOf(libro.getCantidad()));
-		comboBox.setSelectedItem(libro.getGenero());
+		txtPrecio.setText(String.valueOf(libro.getPrice()));
+		txtTitulo.setText(libro.getTitle());
+		Utils.setSelectedRadio(bgFormato, libro.getFormat());
+		Utils.setSelectedRadio(bgEstado, libro.getState());
+		spnStock.setValue(Integer.valueOf(libro.getQuantity()));
+		comboBox.setSelectedItem(libro.getGenre());
 	}
 
-	public void vaciarCampos() {
+	public void clearFields() {
 		txtAutor.setText("");
 		txtIsbn.setBackground(Color.WHITE);
 		txtIsbn.setText("");
@@ -593,12 +594,20 @@ public class UI extends JFrame {
 	}
 	
 
-	public void limpiarTabla() {
+	public void clearTable() {
 		DefaultTableModel tablaVacia = new DefaultTableModel();
 		tablaLibros.setModel(tablaVacia);
 	}
 
-	public String getIsbnTabla() {
+	public void changeTextFieldTextColor(Color color) {
+		txtIsbn.setDisabledTextColor(color);
+		txtAutor.setDisabledTextColor(color);
+		txtEditorial.setDisabledTextColor(color);
+		txtPrecio.setDisabledTextColor(color);
+		txtTitulo.setDisabledTextColor(color);
+	}
+	
+	public String getIsbnFromTable() {
 		try {
 			int columnaIsbn = 0;
 			int fila = tablaLibros.getSelectedRow();
@@ -610,8 +619,8 @@ public class UI extends JFrame {
 
 	public boolean checkIfNull() {
 		return txtPrecio.getText().equals("") || txtAutor.getText().equals("") || txtEditorial.getText().equals("")
-				|| txtTitulo.getText().equals("") || Utiles.getSelectedRadio(bgFormato).equals("")
-				|| Utiles.getSelectedRadio(bgEstado).equals("");
+				|| txtTitulo.getText().equals("") || Utils.getSelectedRadio(bgFormato).equals("")
+				|| Utils.getSelectedRadio(bgEstado).equals("");
 	}
 	
 	public Component getTableEditorComponent() {

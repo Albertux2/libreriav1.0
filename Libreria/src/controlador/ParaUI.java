@@ -115,9 +115,6 @@ public class ParaUI extends UI {
 				}
 			}
 		});
-		editPanel.getTxtAutor().addKeyListener(Events.getRestrictedTextEvent());
-		editPanel.getTxtEditorial().addKeyListener(Events.getRestrictedTextEvent());
-		editPanel.getTxtPrecio().addKeyListener(Events.getRestrictedPriceEvent(editPanel.getTxtPrecio()));
 		btnStock.addActionListener((e) -> {
 			JOptionPane.showMessageDialog(null, stockPanel);
 		});

@@ -14,6 +14,9 @@ import java.awt.Color;
 import java.awt.Component;
 
 import javax.swing.border.LineBorder;
+
+import controlador.Events;
+
 import java.awt.FlowLayout;
 import javax.swing.JRadioButton;
 import modelo.*;
@@ -157,6 +160,9 @@ public class EditPanel extends JPanel {
 		panelEstado.add(rdbtnEspiral_1);
 		addRadiosToGroup(panelEstado, bgEstado);
 		addRadiosToGroup(panelFormato, bgFormato);
+		getTxtAutor().addKeyListener(Events.getRestrictedTextEvent());
+		getTxtEditorial().addKeyListener(Events.getRestrictedTextEvent());
+		getTxtPrecio().addKeyListener(Events.getRestrictedPriceEvent(getTxtPrecio()));
 	}
 
 	private void addRadiosToGroup(JPanel panel, ButtonGroup group) {

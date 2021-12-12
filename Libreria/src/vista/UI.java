@@ -104,13 +104,9 @@ public class UI extends JFrame {
 	private JMenu menuNavegacion;
 	private JMenuItem menuLibreria;
 	private JMenuItem menuBienvenida;
-	/**
-	 * Launch the application.
-	 */
+	protected String[] genres = new String[1];
 
-	/**
-	 * Create the frame.
-	 */
+
 	public UI() {
 		Color radioColor = new Color(133, 213, 237);
 		Color backgroundColor = new Color(58, 175, 185);
@@ -401,8 +397,7 @@ public class UI extends JFrame {
 		panelStockGenero.add(lblNewLabel_2, gbc_lblNewLabel_2);
 		
 		
-		String[] genres = new String[] {"Miedo","Fantasia","Aventura","Sci-Fi","Narrativo","Drama","Romance"};
-		comboBox = new JComboBox(genres);
+		comboBox = new JComboBox();
 		GridBagConstraints gbc_comboBox = new GridBagConstraints();
 		gbc_comboBox.fill = GridBagConstraints.HORIZONTAL;
 		gbc_comboBox.insets = new Insets(0, 0, 0, 5);

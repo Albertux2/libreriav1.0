@@ -14,12 +14,15 @@ import java.util.Iterator;
 
 import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
+import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
+import controlador.DB.DatabaseAccess;
 import modelo.*;
 import vista.EditPanel;
 import vista.InputComponents;
@@ -27,15 +30,14 @@ import vista.StockPanel;
 import vista.UI;
 
 public class ParaUI extends UI {
-	FileControl fileControl = FileControl.getInstance();
-	String path = "./src/files/libros.lib";
 	Bookstore bookstore;
 	EditPanel editPanel = new EditPanel();
 	StockPanel stockPanel = new StockPanel();
-
+	DatabaseAccess databaseAccess;
 	public ParaUI() {
 		super();
 		loadBookstore();
+		
 		btnEdit.addActionListener((e) -> {
 			String isbn = Utils.getISBNWithPane(bookstore);
 			if (isbn != null) {
@@ -50,10 +52,10 @@ public class ParaUI extends UI {
 								Utils.getSelectedRadio(editPanel.getBgEstado()), (Integer) spnStock.getValue(),
 								comboBox.getSelectedItem().toString()));
 					}
+					checkIfNewData(editPanel.getTxtAutor().getText(),editPanel.getTxtEditorial().getText());
 					editPanel.clearFields();
 					bookstore.fillTable(tablaLibros);
-					deleteBook(isbn);
-					saveBookInFile(bookstore.getBook(isbn));
+					updateBook(bookstore.getBook(isbn));
 				} catch (Exception e1) {
 					JOptionPane.showMessageDialog(null, "El ISBN introduce no es válido o no existe");
 				}
@@ -66,7 +68,7 @@ public class ParaUI extends UI {
 					if (!checkIfNull()) {
 						if (!bookstore.containsISBN(getISBN())) {
 							addBook();
-							saveBookInFile(bookstore.getBook(getISBN()));
+							saveBookInDatabase(bookstore.getBook(getISBN()));
 						} else {
 							JOptionPane.showMessageDialog(null, "Ya existe un libro con ese ISBN, introduzca otro.");
 						}
@@ -93,7 +95,7 @@ public class ParaUI extends UI {
 					}
 				}
 			}
-			this.deleteBook(isbn);
+			this.deleteBookFromDatabase(isbn);
 			removeBook(isbn);
 			clearTable();
 			bookstore.fillTable(tablaLibros);
@@ -131,7 +133,7 @@ public class ParaUI extends UI {
 
 						if (showConfirmDialog == JOptionPane.YES_OPTION) {
 							bookstore.removeBook(isbn);
-							deleteBook(isbn);
+							deleteBookFromDatabase(isbn);
 							JOptionPane.showMessageDialog(null, "Libro eliminado con exito");
 						} else {
 							libro.setQuantity(0);
@@ -142,8 +144,7 @@ public class ParaUI extends UI {
 								"Se han eliminado " + cantidad + ", stock restante: " + libro.getQuantity());
 					}
 					bookstore.fillTable(tablaLibros);
-					deleteBook(isbn);
-					saveBookInFile(bookstore.getBook(isbn));
+					updateStock(bookstore.getBook(isbn));
 				}
 			}
 		});
@@ -159,8 +160,8 @@ public class ParaUI extends UI {
 					bookstore.fillTable(tablaLibros);
 					JOptionPane.showMessageDialog(null,
 							"Se han añadido " + cantidad + ", stock : " + libro.getQuantity());
-					deleteBook(isbn);
-					saveBookInFile(bookstore.getBook(isbn));
+					deleteBookFromDatabase(isbn);
+					saveBookInDatabase(bookstore.getBook(isbn));
 				}
 			}
 		});
@@ -177,24 +178,38 @@ public class ParaUI extends UI {
 		bookstore.removeBook(isbn);
 	}
 
-	private void saveBookInFile(Book libro) {
-		fileControl.save(path, libro, true);
+	private void saveBookInDatabase(Book libro) {
+		this.checkIfNewData(txtAutor.getText(),txtEditorial.getText());
+		databaseAccess.insertBook(libro);
+	}
+	
+	private void updateBook(Book book) {
+		databaseAccess.updateBook(book);
+	}
+	
+	private void updateStock(Book book) {
+		databaseAccess.updateStock(book);
+	}
+	
+	private void checkIfNewData(String author,String editorial) {
+		if(!databaseAccess.containsAuthor(author)) {
+			databaseAccess.insertAuthor(author);
+		}
+		if(!databaseAccess.containsEditorial(editorial)){
+			databaseAccess.insertEditorial(editorial);
+		}
 	}
 
-	private void deleteBook(String isbn) {
-		ArrayList<Book> nonDeletedBooks = fileControl.delete(path, isbn);
-		fileControl.saveList(path, nonDeletedBooks);
+	private void deleteBookFromDatabase(String isbn) {
+		databaseAccess.deleteBook(isbn);
 	}
 
 	private void loadBookstore() {
-		int index = 0;
+		databaseAccess = new DatabaseAccess();
+		this.genres = databaseAccess.getGenres();
+		comboBox.setModel(new DefaultComboBoxModel(genres));
 		bookstore = new Bookstore();
-		Book libro = fileControl.getWithIndex(path, index);
-		while (libro != null) {
-			bookstore.addBook(libro);
-			index++;
-			libro = fileControl.getWithIndex(path, index);
-		}
+		bookstore.setBooks(databaseAccess.getBooks());
 		bookstore.fillTable(tablaLibros);
 	}
 }

@@ -23,7 +23,10 @@ public class Bookstore implements Serializable{
 			
 		}
 	}
-
+	
+	public void setBooks(HashMap books) {
+		this.arrayLibro = books;
+	}
 	public Book getBook(int index) {
 		ArrayList<Book> listLibros = new ArrayList<Book>(arrayLibro.values());
 		return listLibros.get(index);

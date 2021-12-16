@@ -24,7 +24,7 @@ public class DatabaseAccess {
 		try (PreparedStatement statement = connection.prepareStatement(
 				"INSERT INTO BOOK(isbn,title,author,editorial,price,format,state,stock,genre)VALUES(?,?,?,?,?,?,?,?,?)")) {
 			statement.setString(1, book.getISBN());
-			statement.setString(2, book.getTitle());
+			statement.setString(2, book.getTitle().toUpperCase());
 			statement.setInt(3, this.getAuthorIdByName(book.getAuthor()));
 			statement.setInt(4, this.getEditorialIdByName(book.getEditorial()));
 			statement.setFloat(5, book.getPrice());
@@ -37,10 +37,10 @@ public class DatabaseAccess {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void updateBook(Book book) {
 		try (PreparedStatement statement = connection.prepareStatement(
-				"UPDATE BOOK SET isbn=?, title=?, author=?, editorial=?, price=?, format=?, state=?, stock=?, genre=? WHERE isbn=?")){
+				"UPDATE BOOK SET isbn=?, title=?, author=?, editorial=?, price=?, format=?, state=?, stock=?, genre=? WHERE isbn=?")) {
 			statement.setString(1, book.getISBN());
 			statement.setString(2, book.getTitle());
 			statement.setInt(3, this.getAuthorIdByName(book.getAuthor()));
@@ -56,10 +56,9 @@ public class DatabaseAccess {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void updateStock(Book book) {
-		try (PreparedStatement statement = connection.prepareStatement(
-				"UPDATE BOOK SET stock=? WHERE isbn=?")){
+		try (PreparedStatement statement = connection.prepareStatement("UPDATE BOOK SET stock=? WHERE isbn=?")) {
 			statement.setInt(1, book.getQuantity());
 			statement.setString(2, book.getISBN());
 			statement.executeUpdate();
@@ -86,6 +85,56 @@ public class DatabaseAccess {
 		return null;
 	}
 
+	public HashMap<String, Book> getBooksFrom(String value, String field, boolean foreignTable) {
+		HashMap<String, Book> books = new HashMap<String, Book>();
+		try (Statement statement = connection.createStatement()) {
+			if (!foreignTable) {
+				String query ="SELECT * FROM BOOK WHERE " + field + " LIKE '%" + value + "%'";
+				return getHashMapFromQuery(query);
+			} else {
+				ArrayList<Integer> ids = new ArrayList<Integer>();
+				ResultSet resultSet = statement
+						.executeQuery("SELECT id FROM " + field + " WHERE name LIKE '%" + value + "%'");
+				while (resultSet.next()) {
+					ids.add(resultSet.getInt(1));
+				}
+				return getBooksFromIdList(ids, field);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	private HashMap<String, Book> getBooksFromIdList(List<Integer> ids, String field) {
+		HashMap<String, Book> books = new HashMap<String, Book>();
+		ids.forEach((e) -> {
+			try (Statement statement2 = connection.createStatement();) {
+				ResultSet resultSet2 = statement2.executeQuery("SELECT * FROM BOOK WHERE " + field + "= " + e);
+				while (resultSet2.next()) {
+					books.put(resultSet2.getString(2),
+							new Book(resultSet2.getString(2), resultSet2.getString(3),
+									getAuthorById(resultSet2.getInt(4)), getEditorialById(resultSet2.getInt(5)),
+									resultSet2.getFloat(6), getFormatById(resultSet2.getInt(7)),
+									getStateById(resultSet2.getInt(8)), resultSet2.getInt(9),
+									getGenreById(resultSet2.getInt(10))));
+				}
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+
+		});
+		return books;
+	}
+
+	public HashMap getBooksFromNumber(String value, String field,String comparator) {
+		if (!value.isEmpty()) {
+		String query = "SELECT * FROM BOOK WHERE "+field+comparator+value;
+		return getHashMapFromQuery(query);
+		}
+		return getBooks();
+	}
+
 	public String getFormatById(int id) {
 		try (PreparedStatement statement = connection.prepareStatement("SELECT name FROM format WHERE id=?")) {
 			statement.setInt(1, id);
@@ -93,6 +142,24 @@ public class DatabaseAccess {
 			resultSet.next();
 			return resultSet.getString(1);
 
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	private HashMap<String,Book> getHashMapFromQuery(String query){
+		HashMap<String, Book> books = new HashMap<String, Book>();
+		try (Statement statement = connection.createStatement()) {
+			ResultSet resultSet = statement.executeQuery(query);
+			while (resultSet.next()) {
+				books.put(resultSet.getString(2),
+						new Book(resultSet.getString(2), resultSet.getString(3), getAuthorById(resultSet.getInt(4)),
+								getEditorialById(resultSet.getInt(5)), resultSet.getFloat(6),
+								getFormatById(resultSet.getInt(7)), getStateById(resultSet.getInt(8)),
+								resultSet.getInt(9), getGenreById(resultSet.getInt(10))));
+			}
+			return books;
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -242,6 +309,7 @@ public class DatabaseAccess {
 		}
 		return -1;
 	}
+
 	public int getEditorialIdByName(String name) {
 		name = name.toUpperCase();
 		try (PreparedStatement statement = connection.prepareStatement("SELECT id FROM editorial WHERE name=?");) {
@@ -254,6 +322,7 @@ public class DatabaseAccess {
 		}
 		return -1;
 	}
+
 	public int getStateIdByName(String name) {
 		name = name.toUpperCase();
 		try (PreparedStatement statement = connection.prepareStatement("SELECT id FROM state WHERE name=?");) {
@@ -266,6 +335,7 @@ public class DatabaseAccess {
 		}
 		return -1;
 	}
+
 	public int getFormatIdByName(String name) {
 		name = name.toUpperCase();
 		try (PreparedStatement statement = connection.prepareStatement("SELECT id FROM format WHERE name=?");) {
@@ -290,8 +360,8 @@ public class DatabaseAccess {
 			e.printStackTrace();
 		}
 		return -1;
-	}	
-	
+	}
+
 	public void deleteBook(String isbn) {
 		try (PreparedStatement statement = connection.prepareStatement("DELETE FROM book WHERE isbn=?");) {
 			statement.setString(1, isbn);
@@ -300,5 +370,5 @@ public class DatabaseAccess {
 			e.printStackTrace();
 		}
 	}
-	
+
 }

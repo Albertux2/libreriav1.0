@@ -105,6 +105,8 @@ public class UI extends JFrame {
 	private JMenuItem menuLibreria;
 	private JMenuItem menuBienvenida;
 	protected String[] genres = new String[1];
+	protected SearchPanel panelSearch = new SearchPanel();
+	private JPanel panelEstanteria;
 
 
 	public UI() {
@@ -173,7 +175,7 @@ public class UI extends JFrame {
 		btnBorrar.setPreferredSize(new Dimension(150, 45));
 		btnBorrar.setFont(new Font("Tahoma", Font.BOLD, 14));
 		panelInferior.add(btnBorrar);
-		setSmallIcon(btnBorrar, "/trash.png", "Borrar libro");
+		setSmallIcon(btnBorrar, "/trash.png", "Borrar libro",40,40);
 
 		btnSalir = new JButton("");
 		btnSalir.setPreferredSize(new Dimension(150, 45));
@@ -343,9 +345,12 @@ public class UI extends JFrame {
 		rdbtnNewRadioButton_5.setBackground(new Color(133, 213, 237));
 		panelEstado.add(rdbtnNewRadioButton_5);
 
-		JPanel panelEstanteria = new JPanel();
+		panelEstanteria = new JPanel();
 		panelEstanteria.setBackground(new Color(208, 220, 244));
+		panelSearch.setBackground(new Color(208, 220, 244));
+		
 		panelTab.addTab("ESTANTERIA", null, panelEstanteria, null);
+		panelTab.addTab("BUSQUEDA",null,panelSearch,null);
 		GridBagLayout gbl_panelEstanteria = new GridBagLayout();
 		gbl_panelEstanteria.columnWidths = new int[] { 0, 0 };
 		gbl_panelEstanteria.rowHeights = new int[] { 0, 0 };
@@ -422,9 +427,9 @@ public class UI extends JFrame {
 		gbc_spnStock.gridx = 3;
 		gbc_spnStock.gridy = 0;
 		panelStockGenero.add(spnStock, gbc_spnStock);
-		setSmallIcon(btnGuardar, "/saveIcon.png", "Guardar libro");
-		setSmallIcon(btnSalir, "/exit.png", "Salir de la aplicaci�n");
-		setSmallIcon(btnClear,"/clear.png","Limpia los datos de la pantalla");
+		setSmallIcon(btnGuardar, "/saveIcon.png", "Guardar libro",40,40);
+		setSmallIcon(btnSalir, "/exit.png", "Salir de la aplicaci�n",40,40);
+		setSmallIcon(btnClear,"/clear.png","Limpia los datos de la pantalla",40,40);
 		
 		cardPanel = new JPanel();
 		contentPane.add(cardPanel);
@@ -437,9 +442,9 @@ public class UI extends JFrame {
 		card.show(cardPanel, "welcome");
 		menuLibro.setEnabled(false);
 		
-		setSmallIcon(btnEdit, "/edit.png", null);
-		setSmallIcon(btnStock, "/stock.png", null);
-		setSmallIcon(btnConsultar, "/consultar.png", null);
+		setSmallIcon(btnEdit, "/edit.png", null,40,40);
+		setSmallIcon(btnStock, "/stock.png", null,40,40);
+		setSmallIcon(btnConsultar, "/consultar.png", null,40,40);
 
 		
 		menuNavegacion = new JMenu("Navegacion");
@@ -452,15 +457,16 @@ public class UI extends JFrame {
 			}
 		});
 		menuNavegacion.add(menuBienvenida);
-		
 		menuLibreria = new JMenuItem("Libreria");
 		menuLibreria.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				card.show(cardPanel,"libreria");
 				menuBienvenida.setVisible(false);
 				menuLibro.setEnabled(true);
+				btnConsultar.setEnabled(true);
 			}
 		});
+		
 		menuNavegacion.add(menuLibreria);
 		panelTab.addChangeListener((c) -> {
 			Component panelSeleccionado = panelTab.getSelectedComponent();
@@ -475,9 +481,11 @@ public class UI extends JFrame {
 			}
 		});
 		
-		setSmallIcon(menuLibreria,"/libr.png",null);
-		setSmallIcon(menuBienvenida,"/logo.gif",null);
 		
+		
+		
+		setSmallIcon(menuLibreria,"/libr.png",null,40,40);
+		setSmallIcon(menuBienvenida,"/logo.gif",null,40,40);
 		txtIsbn.addKeyListener(Events.getRestrictedIsbnText(txtIsbn));
 		txtAutor.addKeyListener(Events.getRestrictedTextEvent());
 		txtEditorial.addKeyListener(Events.getRestrictedTextEvent());
@@ -561,14 +569,14 @@ public class UI extends JFrame {
 		comboBox.setEnabled(enabled);
 	}
 
-	private void setSmallIcon(AbstractButton component, String link, String description) {
+	private void setSmallIcon(AbstractButton component, String link, String description,int x,int y) {
 		ImageIcon img = null;
 		try {
 			img = new ImageIcon(ImageIO.read(getClass().getResourceAsStream(link)));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		ImageIcon resizedImg = new ImageIcon(img.getImage().getScaledInstance(40, 40, Image.SCALE_DEFAULT));
+		ImageIcon resizedImg = new ImageIcon(img.getImage().getScaledInstance(x, y, Image.SCALE_DEFAULT));
 		component.setIcon(resizedImg);
 		component.setToolTipText(description);
 	}
@@ -589,9 +597,15 @@ public class UI extends JFrame {
 	
 	public String getIsbnFromTable() {
 		try {
+			JTable tablaSeleccionada;
+			if(panelTab.getSelectedComponent() == panelEstanteria) {
+				tablaSeleccionada = this.tablaLibros;
+			}else {
+				tablaSeleccionada = this.panelSearch.getTablaLibros();
+			}
 			int columnaIsbn = 0;
-			int fila = tablaLibros.getSelectedRow();
-			return String.valueOf(tablaLibros.getValueAt(fila, columnaIsbn));
+			int fila = tablaSeleccionada.getSelectedRow();
+			return String.valueOf(tablaSeleccionada.getValueAt(fila, columnaIsbn));
 		} catch (Exception e) {
 			return null;
 		}

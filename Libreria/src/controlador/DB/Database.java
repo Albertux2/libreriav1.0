@@ -17,10 +17,19 @@ public class Database {
 
 	private Database() {
 		try {
-			connection = DriverManager.getConnection(URL_BASEDATOS,user,password);
+			connection = DriverManager.getConnection(URL_BASEDATOS, user, password);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+			public void run() {
+				try {
+					connection.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+		}, "Shutdown-thread"));
 	}
 
 	public static Database getInstance() {
@@ -29,7 +38,7 @@ public class Database {
 		}
 		return instance;
 	}
-	
+
 	public Connection getConnection() {
 		return connection;
 	}
